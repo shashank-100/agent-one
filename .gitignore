@@ -1,0 +1,24 @@
+.build/
+.swiftpm/
+DerivedData/
+*.xcodeproj
+xcuserdata/
+.DS_Store
+# secrets and local run data
+.env
+*.p8
+*.mobileprovision
+traces/
+# generated or downloaded
+phone/node_modules/
+phone/dist/
+local/public/
+cloud/.wrangler/
+site/agent-one/.vercel/
+traces/
+ios/*.xcodeproj
+
+# large or personal local output
+recordings/
+build/
+*.sqlite

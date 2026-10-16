@@ -1,0 +1,24 @@
+# Builds and tests on GitHub's Mac runners, so no Xcode is needed on a developer's machine.
+name: iOS
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: macos-26
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select Xcode
+        run: sudo xcode-select -s "$(ls -d /Applications/Xcode*.app | sort -V | tail -1)" && xcodebuild -version
+      - name: Build the package (macOS)
+        run: swift build
+      - name: Generate the Xcode project
+        run: brew install xcodegen && cd ios && xcodegen generate
+      - name: Build the app for the iOS simulator (unsigned)
+        run: |
+          cd ios
+          xcodebuild build -project AgentOne.xcodeproj -scheme AgentOne \
+            -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO | tail -40
+          test "${PIPESTATUS[0]}" -eq 0
