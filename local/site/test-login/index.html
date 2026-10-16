@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Test login</title>
+<style>body{font:17px -apple-system,system-ui,sans-serif;max-width:420px;margin:40px auto;padding:0 16px}label{display:block;margin:14px 0 4px}input{width:100%;font:inherit;padding:10px;box-sizing:border-box}button{margin-top:18px;width:100%;padding:12px;font:inherit}</style>
+</head><body>
+<h1>Test login</h1>
+<p>A local page for checking saved logins. Nothing is sent anywhere.</p>
+<form id="f">
+  <label for="email">Email</label><input id="email" type="email" autocomplete="off">
+  <label for="password">Password</label><input id="password" type="password" autocomplete="off">
+  <button type="submit">Sign in</button>
+</form>
+<p id="out"></p>
+<script>
+document.getElementById('f').onsubmit = (e) => {
+  e.preventDefault();
+  const ok = document.getElementById('email').value === 'tester@example.test' && document.getElementById('password').value === 'Correct-Horse-42';
+  document.getElementById('out').textContent = ok ? 'Signed in.' : 'Wrong email or password.';
+};
+</script>
+</body></html>

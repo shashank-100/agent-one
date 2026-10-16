@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent One · test phone</title>
+<meta name="robots" content="noindex">
+<style>
+:root { --bg: #f6f7f9; --surface: #fff; --ink: #111418; --muted: #6b7280; --line: #e3e6eb; --accent: #0a66e4; --touch: #ff5a36; --ok: #15803d; --warn: #b45309;
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { background: var(--bg); color: var(--ink); font: 14px/1.5 var(--font); }
+.wrap { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 28px; height: 100%; padding: 20px 24px; max-width: 1280px; margin: 0 auto; }
+.stage { position: relative; display: grid; place-items: center; }
+.bezel { padding: 11px; border-radius: 48px; background: #0d131d; box-shadow: 0 30px 60px -30px rgba(15,26,44,.55); transform-origin: top center; }
+iframe { display: block; width: 360px; height: 800px; border: 0; border-radius: 38px; background: #000; }
+.tapdot { position: absolute; width: 30px; height: 30px; margin: -15px 0 0 -15px; border-radius: 50%; border: 2px solid var(--touch); background: rgba(255,90,54,.25); pointer-events: none; opacity: 0; }
+.tapdot.show { animation: tap .9s ease-out; }
+@keyframes tap { 0% { opacity: 1; transform: scale(.6); } 100% { opacity: 0; transform: scale(1.5); } }
+.side { display: grid; grid-template-rows: auto auto auto minmax(0, 1fr); gap: 14px; min-width: 0; min-height: 0; }
+h1 { font-size: 1.25rem; margin: 0; }
+.sub { color: var(--muted); margin: 2px 0 0; font-size: .85rem; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px; display: grid; gap: 10px; min-width: 0; }
+textarea { font: inherit; width: 100%; min-height: 64px; resize: vertical; border: 1px solid var(--line); border-radius: 10px; padding: 10px; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+button { font: inherit; font-weight: 600; border-radius: 999px; padding: 8px 16px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+button:disabled { opacity: .5; cursor: default; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chips button { font-weight: 500; font-size: .8rem; padding: 6px 10px; background: #f1f3f6; border-color: transparent; }
+.status { font-size: .85rem; color: var(--muted); }
+.status b { color: var(--ink); }
+.ask { border-color: var(--touch); background: #fff7f4; }
+.ask[hidden] { display: none; }
+.ask .t { font-family: var(--mono); font-size: .8rem; background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; }
+.log { overflow: auto; min-height: 0; font-family: var(--mono); font-size: .75rem; }
+.log ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.log li { display: grid; grid-template-columns: 2.2em minmax(0, 1fr); gap: 6px; }
+.log .n { color: var(--muted); }
+.log .act { color: var(--ink); font-weight: 600; }
+.log .why { color: var(--muted); font-family: var(--font); font-size: .78rem; }
+.log .res { color: var(--accent); }
+.log .err { color: var(--warn); }
+.log .end { color: var(--ok); font-weight: 600; }
+.fine { color: var(--muted); font-size: .72rem; }
+@media (max-width: 860px) { .wrap { grid-template-columns: minmax(0, 1fr); height: auto; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="stage">
+    <div class="bezel" id="bezel"><iframe id="phone" src="/" title="Test phone"></iframe></div>
+    <div class="tapdot" id="tapdot"></div>
+  </div>
+  <div class="side">
+    <div>
+      <h1>Agent One on a test phone</h1>
+      <p class="sub">A simulated phone (MobileGym, English, 23 apps). The agent sees the screen, the model picks one action, the action happens on the phone. Nothing is scripted.</p>
+    </div>
+    <div class="card">
+      <textarea id="task" placeholder="Give the agent a task">Open my desk lamp's app and set its brightness to 30%</textarea>
+      <div class="chips">
+        <button type="button" data-t="Open the Calculator and work out 128 times 46. Tell me the result.">Calculator</button>
+        <button type="button" data-t="Open Notes, create a new note that says: Buy milk and eggs">New note</button>
+        <button type="button" data-t="Open the Clock app and add an alarm for 7:30">Alarm</button>
+        <button type="button" data-t="In Messages, reply to the latest message with: Thanks, got it">Reply in Messages</button>
+        <button type="button" data-t="Send the PDF I downloaded to my Family group in Chats">PDF to group</button>
+        <button type="button" data-t="Open my desk lamp's app and set its brightness to 30%">Light 30%</button>
+        <button type="button" data-t="Check my building's visitor app and approve the delivery person">Approve visitor</button>
+        <button type="button" data-t="Turn off promotional notifications in the Shop app, but keep delivery alerts">Shop promos off</button>
+        <button type="button" data-t="Reschedule my Yoga Flow class in the gym app to Thursday morning">Gym reschedule</button>
+        <button type="button" data-t="Upload yesterday's receipt screenshot to my company's expense app as a meals claim and submit it">Expense claim</button>
+      </div>
+      <div class="row">
+        <button type="button" class="primary" id="run">Run</button>
+        <button type="button" id="stop" disabled>Stop</button>
+        <button type="button" id="home">Phone home</button>
+        <button type="button" id="runall" title="Runs every task above on a fresh phone; approvals are allowed automatically">Run all ×</button><input id="times" type="number" min="1" max="10" value="1" style="width:3.2em">
+        <label style="font-size:.8rem"><input type="checkbox" id="skills"> Use saved skills</label>
+        <span class="status" id="status">Loading the phone…</span>
+      </div>
+    </div>
+    <div class="card ask" id="ask" hidden>
+      <b id="ask-title">Allow this tap?</b>
+      <div class="t" id="ask-detail"></div>
+      <input id="ask-input" hidden style="font:inherit;padding:8px;border:1px solid var(--line);border-radius:8px">
+      <div class="row"><button type="button" class="primary" id="ask-yes">Allow</button><button type="button" id="ask-no">Don't allow</button></div>
+    </div>
+    <pre class="card" id="results" hidden style="white-space:pre-wrap;font-size:.8rem"></pre>
+    <div class="card log"><ol id="log"></ol></div>
+    <p class="fine">Test bench, not public. The phone and its apps are MobileGym's (Apache-2.0 code; app data CC BY-NC 4.0, used here for non-commercial testing). Model calls go through this site's server; keys never reach the browser.</p>
+  </div>
+</div>
+<script src="/demo/agent-loop.js"></script>
+</body>
+</html>
