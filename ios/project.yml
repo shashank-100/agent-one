@@ -1,0 +1,106 @@
+# XcodeGen spec for the iPhone app. Generate with `xcodegen generate` (CI does this); no Xcode window needed.
+name: AgentOne
+options:
+  bundleIdPrefix: com.agentone
+  deploymentTarget:
+    iOS: "17.0"
+packages:
+  PhoneUse:
+    path: ..
+  # Finn Voorhees's durable agent runtime (CC0): Apple's on-device model / Private Cloud Compute as a provider.
+  PiDurableKit:
+    url: https://github.com/finnvoor/PiDurableKit
+    branch: main
+schemes:
+  AgentOne:
+    build:
+      targets:
+        AgentOne: all
+    test:
+      targets:
+        - AgentDriver
+targets:
+  AgentOne:
+    type: application
+    platform: iOS
+    sources:
+      - path: App
+      - path: Shared
+    info:
+      path: App/Info.plist
+      properties:
+        BGTaskSchedulerPermittedIdentifiers: ["com.agentone.app.run.*"]
+        ITSAppUsesNonExemptEncryption: false
+        UIBackgroundModes: [processing]
+        NSSupportsLiveActivities: true
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+        CFBundleURLTypes:
+          - CFBundleURLSchemes: [agentone]
+    dependencies:
+      - package: PhoneUse
+        product: PhoneUseCore
+      - package: PhoneUse
+        product: PhoneUseUI
+      - package: PiDurableKit
+      - target: AgentOneWidget
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.agentone.app
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        SWIFT_VERSION: "6.0"
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Agent One
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
+        INFOPLIST_KEY_NSLocalNetworkUsageDescription: Agent One lets Hermes on your computer control this iPhone over your local network.
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: B5N625SZK6
+      configs:
+        Debug:
+          SWIFT_ACTIVE_COMPILATION_CONDITIONS: DEBUG AGENTONE_DEVCONTROL
+
+  # The run's Live Activity (Lock Screen and Dynamic Island).
+  AgentOneWidget:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: Widget
+      - path: Shared
+    info:
+      path: Widget/Info.plist
+      properties:
+        CFBundleDisplayName: Agent One
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.agentone.app.widget
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        SWIFT_VERSION: "6.0"
+        GENERATE_INFOPLIST_FILE: YES
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: B5N625SZK6
+
+  # Runs the agent with Apple's UI test framework so it can use any app (Safari, Settings, Amazon).
+  AgentDriver:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: AgentDriver
+    dependencies:
+      - target: AgentOne
+      - package: PhoneUse
+        product: PhoneUseCore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.agentone.driver
+        SWIFT_VERSION: "6.0"
+        GENERATE_INFOPLIST_FILE: YES
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: B5N625SZK6
+        TEST_TARGET_NAME: AgentOne
