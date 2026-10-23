@@ -105,5 +105,4 @@ Sources/PhoneUseCore/   the agent core: loop, actions, prompt, safety rules, ele
 ios/App/                the iPhone app: chat UI, PiDurableKit agent, in-app phone control, Maps, settings
 ios/AgentDriver/        UI-test runner that drives any app from the Mac
 local/                  Claude Code bridge and chat sync
-notes/                  research notes and findings
 ```

@@ -22,3 +22,6 @@ ios/*.xcodeproj
 recordings/
 build/
 *.sqlite
+notes/
+eval/
+phone/
