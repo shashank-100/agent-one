@@ -7,7 +7,8 @@
 </p>
 
 <p align="center">
-  <a href="media/demo-amazon-add-to-cart.mp4">▶ Demo: one message, and the agent opens Safari and adds an iPhone 16 to the Amazon cart</a>
+  <img src="media/demo-amazon-add-to-cart.gif" width="300" alt="Agent One adding an iPhone 16 to the Amazon cart from one message"><br>
+  <sub>One message, and the agent opens Safari and adds an iPhone 16 to the Amazon cart (1.5× speed). <a href="media/demo-amazon-add-to-cart.mp4">Full video</a></sub>
 </p>
 
 Agent One is an iPhone app with an AI agent that uses your other apps for you. You send it a message; it reads the screen, picks the next action, taps and types on the phone, and repeats until the task is done, then answers in the chat. It drives real apps (Safari, Settings, Maps, Amazon's website) the way a person would, so it needs no app-specific integration. Every step shows in the chat with a picture of the screen, and anything that pays, sends or deletes waits for your Allow.
