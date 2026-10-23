@@ -31,6 +31,8 @@ actor PhoneAgent {
     private var approve: Approver?
     private var lastLabel = "", lastScreen: ScreenFingerprint?, streak = 0
     private var shown: [ScreenElement] = []
+    /// The screen the numbered list was read from; a tap by number checks the screen still matches it.
+    private var listScreen: ScreenFingerprint?
     private var wantImage = false
     /// In-app the list comes from reading the screenshot's text, so icon-only buttons are missing from it.
     private var textOnlyList: Bool {
@@ -164,6 +166,24 @@ actor PhoneAgent {
     /// Saved logins (iPhone Keychain). The agent types them; the model only ever sees their names.
     private let vault = KeychainVault()
     private struct WaitArgs: Decodable, Sendable { var seconds: Int? }
+    private struct WaitForArgs: Decodable, Sendable { var text: String; var seconds: Int? }
+    private struct SliderArgs: Decodable, Sendable { var track_left_x: Int; var track_right_x: Int; var y: Int; var knob_x: Int; var percent: Int }
+    private struct PickerArgs: Decodable, Sendable { var x: Int; var y: Int; var rows: Int; var row_height: Int? }
+
+    /// Reads the screen every half second until `text` shows up, then returns the screen like any action does.
+    private func waitFor(_ text: String, seconds: Int) async throws -> ToolResult {
+        let deadline = Date().addingTimeInterval(Double(seconds))
+        var found = false
+        while Date() < deadline {
+            _ = try? await device.screenshot()
+            if let reader = device as? any ElementReader,
+               await reader.elements().contains(where: { $0.text.localizedCaseInsensitiveContains(text) }) { found = true; break }
+            try await Task.sleep(for: .milliseconds(500))
+        }
+        let appeared = found
+        let note = "\"\(text)\" did not appear within \(seconds) s."
+        return try await act("wait_for \"\(text)\" — \(appeared ? "found" : "not found")") { _ in if !appeared { throw PhoneAgentError(note) } }
+    }
     private struct FinishArgs: Decodable, Sendable { var success: Bool; var answer: String }
     private struct ReasonArgs: Decodable, Sendable { var reason: String }
 
@@ -244,6 +264,32 @@ actor PhoneAgent {
                 "from": .string("Start place or address"), "to": .string("Destination place or address"), "mode": .string("driving, walking or transit").optional,
             ])) { (a: MapsRouteArgs, _) in
                 do { return ToolResult.text(try await MapsTools.directions(from: a.from, to: a.to, mode: a.mode)) } catch { return ToolResult.error("Maps: \(error)") }
+            }
+            Tool("wait_for", description: "Wait until some text is on screen (a page finished loading, \"Added to cart\" appeared), up to the given seconds. Faster and surer than wait.", parameters: .object([
+                "text": .string("Text to wait for, as it will be written on screen"), "seconds": .integer("Most to wait, 1 to 20").optional,
+            ])) { (a: WaitForArgs, _) in
+                try await self.waitFor(a.text, seconds: min(20, max(1, a.seconds ?? 10)))
+            }
+            Tool("set_slider", description: "Set a slider (brightness, volume, a price range) to a percentage. Give the track's left and right ends and the knob, from the screenshot.", parameters: .object([
+                "track_left_x": x, "track_right_x": x, "y": y, "knob_x": x, "percent": .integer("0 to 100"),
+            ])) { (a: SliderArgs, _) in
+                let target = a.track_left_x + (a.track_right_x - a.track_left_x) * min(100, max(0, a.percent)) / 100
+                return try await self.act("set_slider \(a.percent)%") { try await $0.swipe(fromX: a.knob_x, fromY: a.y, toX: target, toY: a.y, seconds: 0.6) }
+            }
+            Tool("turn_picker", description: "Turn a picker wheel (alarm time, date, a list wheel) by whole rows. Positive rows move to later or lower values, negative to earlier. Give the wheel's centre.", parameters: .object([
+                "x": x, "y": y, "rows": .integer("Rows to move, -12 to 12"), "row_height": .integer("One row's height in screenshot pixels; about 100 on this phone").optional,
+            ])) { (a: PickerArgs, _) in
+                let rows = min(12, max(-12, a.rows)), h = a.row_height ?? 100
+                return try await self.act("turn_picker \(rows) rows") { device in
+                    // Move a few rows per drag, slowly, so the wheel lands on a row instead of spinning on.
+                    var left = rows
+                    while left != 0 {
+                        let step = left > 0 ? min(3, left) : max(-3, left)
+                        try await device.swipe(fromX: a.x, fromY: a.y, toX: a.x, toY: a.y - step * h, seconds: 0.5 + 0.15 * Double(abs(step)))
+                        left -= step
+                        try await Task.sleep(for: .milliseconds(350))
+                    }
+                }
             }
             Tool("go_home", description: "Go to the home screen.") { _ in try await self.act("go_home") { try await $0.pressHome() } }
             Tool("go_back", description: "Go back to the previous screen.") { _ in try await self.act("go_back") { try await $0.pressBack() } }
@@ -327,6 +373,7 @@ actor PhoneAgent {
         }
         guard let reader = device as? any ElementReader else { return (shot, "") }
         let elements = await reader.elements()
+        listScreen = ScreenFingerprint(jpeg: shot.jpeg)
         if !shown.isEmpty, elements == shown { return (shot, "\nElements on screen: unchanged since the last list (same numbers).") }
         shown = elements
         let lines = elements.enumerated().map { i, e in "\(i + 1) \(e.tappable ? "•" : "-") \"\(e.text)\" [x=\(e.x) y=\(e.y) w=\(e.width) h=\(e.height)]" }
@@ -335,14 +382,29 @@ actor PhoneAgent {
     }
 
     /// The point to act on: the centre of a listed element, or the given pixels.
-    private func point(_ element: Int?, _ x: Int?, _ y: Int?) throws -> (x: Int, y: Int) {
+    /// The point to act on. For an element number, the screen must still be the one the list came from: if it changed
+    /// (a page moved, a banner rotated), the element is found again by its text, and a tap that can't be placed for
+    /// sure is refused rather than landing on whatever is there now.
+    private func point(_ element: Int?, _ x: Int?, _ y: Int?) async throws -> (x: Int, y: Int) {
         if let element, element > 0 {
             guard element <= shown.count else { throw PhoneAgentError("There is no element \(element) in the list on this screen.") }
-            return shown[element - 1].center
+            let wanted = shown[element - 1]
+            guard let listScreen, let now = try? await device.screenshot(), let current = ScreenFingerprint(jpeg: now.jpeg),
+                  !current.isSameScreen(as: listScreen), let reader = device as? any ElementReader else { return wanted.center }
+            let fresh = await reader.elements()
+            let matches = fresh.filter { $0.text == wanted.text }
+            if matches.count == 1 {
+                print("AGENT_STALE element \(element) \"\(wanted.text)\" moved; tapping it where it is now")
+                return matches[0].center
+            }
+            throw PhoneAgentError(matches.isEmpty
+                ? "The screen changed since the list: \"\(wanted.text)\" (element \(element)) is no longer on screen. Read the new list before tapping."
+                : "The screen changed since the list and \"\(wanted.text)\" now appears \(matches.count) times. Read the new list and pick one.")
         }
         guard let x, let y else { throw PhoneAgentError("Give an element number, or x and y.") }
         return (x, y)
     }
+
 
     /// Types a saved login into a field. Nothing about the value goes into the conversation, and no screenshot follows.
     private func fill(_ name: String, element: Int?, clear: Bool) async throws -> ToolResult {
@@ -350,7 +412,7 @@ actor PhoneAgent {
             return ToolResult.error("There is no saved login called \"\(name)\". Use hand_over so the user types it.")
         }
         if let element {
-            let p = try point(element, nil, nil)
+            let p = try await point(element, nil, nil)
             try await device.tap(x: p.x, y: p.y)
             try await Task.sleep(for: .milliseconds(300))
         }

@@ -270,6 +270,8 @@ final class OnDeviceController: DeviceController, ElementReader, @unchecked Send
 
     func tap(x: Int, y: Int) async throws {
         try ensureReady()
+        // Time and place of each touch, for drawing a tap marker on a recording afterwards (local/tap-marker.py).
+        print(String(format: "AGENT_TAP %.3f %d %d", Date().timeIntervalSince1970, x, y))
         let p = point(x, y)
         let path = try makePath(at: p, offset: 0)
         send(path, "liftUpAtOffset:", 0.1)
@@ -550,8 +552,26 @@ final class OnDeviceController: DeviceController, ElementReader, @unchecked Send
             "whatsapp": "net.whatsapp.WhatsApp", "gmail": "com.google.Gmail", "chrome": "com.google.chrome.ios",
             "spotify": "com.spotify.client", "instagram": "com.burbn.instagram", "telegram": "ph.telegra.Telegraph",
         ]
-        return known[key] ?? (key.contains(".") ? name : nil)
+        return known[key] ?? (key.contains(".") ? name : nil) ?? installedApps()[key]
     }
+
+    /// Every installed app, display name (lower case) → bundle id, read once from LaunchServices' private
+    /// LSApplicationWorkspace (developer builds only, like the rest of this file).
+    static func installedApps() -> [String: String] {
+        if let cached = installed { return cached }
+        var map: [String: String] = [:]
+        if let ws = (NSClassFromString("LSApplicationWorkspace") as? NSObject.Type)?.perform(NSSelectorFromString("defaultWorkspace"))?.takeUnretainedValue() as? NSObject,
+           let apps = ws.perform(NSSelectorFromString("allApplications"))?.takeUnretainedValue() as? [NSObject] {
+            for app in apps {
+                guard let id = app.perform(NSSelectorFromString("bundleIdentifier"))?.takeUnretainedValue() as? String,
+                      let name = app.perform(NSSelectorFromString("localizedName"))?.takeUnretainedValue() as? String else { continue }
+                map[name.lowercased()] = id
+            }
+        }
+        installed = map
+        return map
+    }
+    nonisolated(unsafe) private static var installed: [String: String]?
 }
 
 #endif
