@@ -10,7 +10,7 @@ packages:
   # Finn Voorhees's durable agent runtime (CC0): Apple's on-device model / Private Cloud Compute as a provider.
   PiDurableKit:
     url: https://github.com/finnvoor/PiDurableKit
-    branch: main
+    revision: 1305a72ffe5ea29a9f5e7d576a7cf9334189c1ef
 schemes:
   AgentOne:
     build:

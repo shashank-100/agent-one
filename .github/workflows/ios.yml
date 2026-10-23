@@ -20,5 +20,5 @@ jobs:
         run: |
           cd ios
           xcodebuild build -project AgentOne.xcodeproj -scheme AgentOne \
-            -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO | tail -40
-          test "${PIPESTATUS[0]}" -eq 0
+            -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO > build.log 2>&1 || { grep -E 'error:|BUILD FAILED' build.log | head -40; exit 1; }
+          tail -5 build.log
