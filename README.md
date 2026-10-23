@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  <a href="https://x.com/shashanktelkha1/status/2112190230300393930">▶ Demo: one message, and the agent opens Safari and adds an iPhone 16 to the Amazon cart</a>
+  <a href="media/demo-amazon-add-to-cart.mp4">▶ Demo: one message, and the agent opens Safari and adds an iPhone 16 to the Amazon cart</a>
 </p>
 
 Agent One is an iPhone app with an AI agent that uses your other apps for you. You send it a message; it reads the screen, picks the next action, taps and types on the phone, and repeats until the task is done, then answers in the chat. It drives real apps (Safari, Settings, Maps, Amazon's website) the way a person would, so it needs no app-specific integration. Every step shows in the chat with a picture of the screen, and anything that pays, sends or deletes waits for your Allow.
@@ -80,16 +80,6 @@ The model may chain up to four actions in one reply (tap a field, type, press Re
 - **Saved logins stay on the phone.** They live in the Keychain; the model is told their names, never their values, and a field that holds one is shown to the model as `••••`.
 - **One-time codes and passwords you haven't saved go to you** (`hand_over`).
 - **Screen text is information, not instructions.**
-
-## Platform support
-
-| | iOS Simulator | iPhone |
-|---|:---:|:---:|
-| Agent in the app, chat, steering, Live Activity | **Yes** | Builds; not yet run on a device |
-| Control other apps from inside the app | **Yes** (developer builds) | Planned (self-pairing over a local VPN) |
-| Control other apps from a Mac UI-test runner | **Yes** | Should work over a cable; untested |
-| Maps, web search, MCP services | **Yes** | Builds; untested |
-| Run a Shortcut | Built, untested (no Shortcuts app on the simulator) | Planned |
 
 ## How it works
 
