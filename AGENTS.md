@@ -33,7 +33,6 @@ Sources/PhoneUseCore/   the agent (Swift): loop, actions, prompt, models, approv
 Sources/PhoneUseUI/     SwiftUI screens and view models (task, approvals, model settings)
 Sources/phoneuse-run    command line: run the agent against a protocol endpoint
 ios/                    the iPhone app (XcodeGen spec project.yml + App/); `xcodegen generate` makes the project
-phone/                  MobileGym, trimmed to 17 apps, English by default: the test phone
 local/                  Claude Code bridge, prompt/tools, test-phone build and demo page
 cloud/                  Website hosting configuration only; no model credentials or inference
 .github/workflows/      iOS build in CI

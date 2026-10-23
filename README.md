@@ -103,11 +103,6 @@ The model may chain up to four actions in one reply (tap a field, type, press Re
 Sources/PhoneUseCore/   the agent core: loop, actions, prompt, safety rules, element lists, saved logins
 ios/App/                the iPhone app: chat UI, PiDurableKit agent, in-app phone control, Maps, settings
 ios/AgentDriver/        UI-test runner that drives any app from the Mac
-local/                  Claude Code bridge, chat sync, MobileGym test phone
-phone/                  MobileGym, the simulated phone used for graded test tasks
+local/                  Claude Code bridge and chat sync
 notes/                  research notes and findings
 ```
-
-## Status
-
-Early and personal. Working in the iOS Simulator; the next step is running the same control from a real iPhone with no Mac attached.
